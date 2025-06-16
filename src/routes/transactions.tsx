@@ -1,3 +1,4 @@
+import Transactions from "@/modules/Transactions";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/transactions")({
@@ -5,5 +6,5 @@ export const Route = createFileRoute("/transactions")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/transactions"!</div>;
+  return <Transactions />;
 }

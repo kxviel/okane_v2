@@ -28,6 +28,11 @@ const navItems = [
     url: "/transactions",
     icon: CreditCard,
   },
+  {
+    title: "Categories",
+    url: "/categories",
+    icon: CreditCard,
+  },
 ];
 
 const bottomNavItems = [

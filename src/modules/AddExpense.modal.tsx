@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,32 +18,92 @@ type Props = {
 };
 
 export function AddExpenseModal({ isOpen, hideModal }: Props) {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    date: "",
+    category: "",
+    amount: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log(formData); // Replace with your submission logic
+    hideModal();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={hideModal}>
-      <form>
+      <form onSubmit={handleSubmit}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit profile</DialogTitle>
+            <DialogTitle>Add Expense</DialogTitle>
             <DialogDescription>
-              Make changes to your profile here. Click save when you&apos;re
-              done.
+              Fill in the details of your expense and save.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
             <div className="grid gap-3">
-              <Label htmlFor="name-1">Name</Label>
-              <Input id="name-1" name="name" defaultValue="Pedro Duarte" />
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+              />
             </div>
             <div className="grid gap-3">
-              <Label htmlFor="username-1">Username</Label>
-              <Input id="username-1" name="username" defaultValue="@peduarte" />
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="grid gap-3">
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                name="date"
+                type="date"
+                value={formData.date}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="grid gap-3">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="grid gap-3">
+              <Label htmlFor="amount">Amount</Label>
+              <Input
+                id="amount"
+                name="amount"
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={handleChange}
+              />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" type="button">
+                Cancel
+              </Button>
             </DialogClose>
-            <Button type="submit">Save changes</Button>
+            <Button type="submit">Save Expense</Button>
           </DialogFooter>
         </DialogContent>
       </form>
