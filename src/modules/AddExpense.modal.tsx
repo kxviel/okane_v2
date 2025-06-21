@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { invoke } from "@tauri-apps/api/core";
 
 type Props = {
   isOpen: boolean;
@@ -33,13 +34,14 @@ export function AddExpenseModal({ isOpen, hideModal }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData); // Replace with your submission logic
+    console.log(formData);
+    invoke("add_expense", formData);
     hideModal();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={hideModal}>
-      <form onSubmit={handleSubmit}>
+      <form>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add Expense</DialogTitle>
@@ -103,7 +105,9 @@ export function AddExpenseModal({ isOpen, hideModal }: Props) {
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit">Save Expense</Button>
+            <Button type="submit" onClick={handleSubmit}>
+              Save Expense
+            </Button>
           </DialogFooter>
         </DialogContent>
       </form>

@@ -21,6 +21,11 @@
       "csp": null
     }
   },
+  "plugins": {
+    "sql": {
+      "default": "sqlite:./okane.db"
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
