@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { invoke } from "@tauri-apps/api/core";
 
 type Props = {
   isOpen: boolean;
@@ -18,21 +19,27 @@ type Props = {
 };
 
 export function AddCategoryModal({ isOpen, hideModal }: Props) {
-  const [category, setCategory] = useState("");
+  const [form, setForm] = useState({
+    category_name: "",
+    desc: ""
+  })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCategory(e.target.value);
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(category); // Replace with your submission logic
+    console.log(form);
+    await invoke('add_category', {
+      category: { ...form }
+    });
     hideModal();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={hideModal}>
-      <form onSubmit={handleSubmit}>
+      <form>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add Category</DialogTitle>
@@ -40,13 +47,22 @@ export function AddCategoryModal({ isOpen, hideModal }: Props) {
               Fill in the details of your category and save.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid gap-3">
-              <Label htmlFor="title">Category Title</Label>
+          <div className="">
+            <div className="">
+              <Label htmlFor="category_name">Category Title</Label>
               <Input
-                id="title"
-                name="title"
-                value={category}
+                id="category_name"
+                name="category_name"
+                value={form.category_name}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="">
+              <Label htmlFor="desc">Category Desc</Label>
+              <Input
+                id="desc"
+                name="desc"
+                value={form.desc}
                 onChange={handleChange}
               />
             </div>
@@ -57,7 +73,7 @@ export function AddCategoryModal({ isOpen, hideModal }: Props) {
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit">Save Category</Button>
+            <Button type="submit" onClick={handleSubmit}>Save Category</Button>
           </DialogFooter>
         </DialogContent>
       </form>

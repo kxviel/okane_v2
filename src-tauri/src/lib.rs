@@ -1,37 +1,51 @@
-use serde::Deserialize;
+mod database;
 
-// Global DB pool
-// static DB_POOL: OnceLock<Pool<Sqlite>> = OnceLock::new();
+use tauri::{Manager, State};
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[derive(Debug, Deserialize)]
-struct ExpenseInput {
-    title: String,
+#[derive(serde::Deserialize, Debug)]
+struct CategoryRequest {
+    category_name: String,
     desc: String,
-    category: String,
-    amount: f64,
 }
 
 #[tauri::command]
-fn add_expense(expense: ExpenseInput) {
-    println!("Expense created: {:?}", expense);
-    const result = await db.execute(
-      "INSERT into todos (id, title, status) VALUES ($1, $2, $3)",
-      [todos.id, todos.title, todos.status],
+async fn add_category(
+    category: CategoryRequest,
+    state: State<'_, database::AppState>,
+) -> Result<String, String> {
+    println!("Adding category: {:?}", category);
+
+    let result = sqlx::query(
+        "INSERT INTO category (category_name, desc, created_at) VALUES (?, ?, DATETIME('now'))",
+    )
+    .bind(&category.category_name)
+    .bind(&category.desc)
+    .execute(&state.db) // Use the database pool from app state
+    .await
+    .map_err(|e| format!("Database insert error: {}", e))?;
+
+    println!(
+        "Category added successfully, rows affected: {}",
+        result.rows_affected()
     );
+    Ok(format!(
+        "Category '{}' added successfully",
+        category.category_name
+    ))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, add_expense])
+        .invoke_handler(tauri::generate_handler![add_category])
+        .setup(|app| {
+            tauri::async_runtime::block_on(async move {
+                let db = database::db_connection(&app).await;
+                app.manage(database::AppState { db });
+            });
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
