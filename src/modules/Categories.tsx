@@ -18,13 +18,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AddCategoryModal } from "./AddCategory.modal";
 import { Input } from "@/components/ui/input";
+import { invoke } from "@tauri-apps/api/core";
 
 export default function Categories() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
+
+  useEffect(() => {
+    console.log(invoke('get_category', {}));
+
+  }, [])
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
