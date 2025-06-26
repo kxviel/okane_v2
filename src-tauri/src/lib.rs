@@ -12,10 +12,10 @@ struct Params {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Category {
-    id: i64,
+    id: Option<i64>,
     category_name: String,
     desc: String,
-    created_at: String,
+    created_at: Option<String>,
 }
 
 #[tauri::command]
@@ -29,17 +29,18 @@ async fn get_category(
     let limit = 10;
     let offset = (page - 1) * limit;
 
-    let query = format!(
-        "
+    println!("Page: {} Search: {}", page, search);
+
+    let query = "
         SELECT * FROM category 
-        WHERE category_name LIKE %{}% 
-        LIMIT {} 
-        OFFSET {}
-        ",
-        search, limit, offset
-    );
+        WHERE category_name LIKE ?
+        LIMIT ? 
+        OFFSET ?";
 
     let rows = sqlx::query(&query)
+        .bind(format!("%{}%", search))
+        .bind(limit)
+        .bind(offset)
         .fetch_all(&state.db)
         .await
         .map_err(|e| format!("Database query error: {}", e))?;
@@ -47,11 +48,12 @@ async fn get_category(
     let mut categories = Vec::new();
 
     for row in rows {
+        println!("Row: {}", row.get::<String, _>("category_name"));
         let category = Category {
-            id: row.get("id"),
-            category_name: row.get("category_name"),
-            desc: row.get("desc"),
-            created_at: row.get("created_at"),
+            id: Some(row.get::<i64, _>("id")),
+            category_name: row.get::<String, _>("category_name"),
+            desc: row.get::<String, _>("desc"),
+            created_at: Some(row.get::<String, _>("created_at")),
         };
         categories.push(category);
     }
@@ -66,8 +68,7 @@ async fn add_category(
 ) -> Result<String, String> {
     let query = "
         INSERT INTO category (category_name, desc, created_at)
-        VALUES (?, ?, DATETIME('now')
-        ";
+        VALUES (?, ?, DATETIME('now'))";
 
     let result = sqlx::query(&query)
         .bind(&category.category_name)

@@ -15,26 +15,28 @@ import { invoke } from "@tauri-apps/api/core";
 
 type Props = {
   isOpen: boolean;
+  refetch: () => Promise<void>;
   hideModal: () => void;
 };
 
-export function AddCategoryModal({ isOpen, hideModal }: Props) {
+export function AddCategoryModal({ isOpen, refetch, hideModal }: Props) {
   const [form, setForm] = useState({
     category_name: "",
-    desc: ""
-  })
+    desc: "",
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log(form);
-    await invoke('add_category', {
-      category: { ...form }
-    });
-    hideModal();
+    await invoke("add_category", {
+      category: { ...form },
+    })
+      .then(refetch)
+      .finally(hideModal);
   };
 
   return (
@@ -73,7 +75,9 @@ export function AddCategoryModal({ isOpen, hideModal }: Props) {
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" onClick={handleSubmit}>Save Category</Button>
+            <Button type="submit" onClick={handleSubmit}>
+              Save Category
+            </Button>
           </DialogFooter>
         </DialogContent>
       </form>

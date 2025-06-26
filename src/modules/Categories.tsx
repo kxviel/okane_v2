@@ -18,26 +18,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AddCategoryModal } from "./AddCategory.modal";
 import { Input } from "@/components/ui/input";
-import { invoke } from "@tauri-apps/api/core";
+import { useGetCategory } from "./useGetCategory";
 
 export default function Categories() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [categorySearch, setCategorySearch] = useState("");
 
-  useEffect(() => {
-    console.log(invoke('get_category', {}));
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
 
-  }, [])
+  const { isLoading, categories, refetch } = useGetCategory({ page, search });
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCategorySearch(e.target.value);
+    setSearch(e.target.value);
   };
 
   return (
@@ -60,7 +59,7 @@ export default function Categories() {
         <Input
           id="title"
           name="title"
-          value={categorySearch}
+          value={search}
           onChange={handleChange}
           className="ml-auto w-64"
           placeholder="Search categories..."
@@ -74,25 +73,30 @@ export default function Categories() {
           <TableCaption>A list of your recent invoices.</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Invoice</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>#</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Created At</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell className="font-medium">INV001</TableCell>
-              <TableCell>Paid</TableCell>
-              <TableCell>Credit Card</TableCell>
-              <TableCell className="text-right">$250.00</TableCell>
-            </TableRow>
+            {categories.map((category, index) => (
+              <TableRow key={category.id}>
+                <TableCell className="font-medium">{index + 1}</TableCell>
+                <TableCell>{category.category_name}</TableCell>
+                <TableCell>{category.desc}</TableCell>
+                <TableCell className="text-right">
+                  {category.created_at}
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
 
       <AddCategoryModal
         isOpen={isModalOpen}
+        refetch={refetch}
         hideModal={() => setIsModalOpen(false)}
       />
     </>
