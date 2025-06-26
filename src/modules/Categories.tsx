@@ -12,24 +12,32 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { AddCategoryModal } from "./AddCategory.modal";
 import { Input } from "@/components/ui/input";
 import { useGetCategory } from "./useGetCategory";
+import { EllipsisIcon, Loader2 } from "lucide-react";
+import { useDeleteCategory } from "./useDeleteCategory";
 
 export default function Categories() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [search, setSearch] = useState("");
 
   const { isLoading, categories, refetch } = useGetCategory({ page, search });
+  const { deleteCategory } = useDeleteCategory(refetch);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -37,6 +45,12 @@ export default function Categories() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
+  };
+
+  const handleEdit = () => {};
+
+  const handleDelete = (id: number) => {
+    deleteCategory(id);
   };
 
   return (
@@ -69,36 +83,65 @@ export default function Categories() {
       </header>
 
       <div className="p-4">
-        <Table>
-          <TableCaption>A list of your recent invoices.</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>#</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Created At</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {categories.map((category, index) => (
-              <TableRow key={category.id}>
-                <TableCell className="font-medium">{index + 1}</TableCell>
-                <TableCell>{category.category_name}</TableCell>
-                <TableCell>{category.desc}</TableCell>
-                <TableCell className="text-right">
-                  {category.created_at}
-                </TableCell>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2 text-sm text-muted-foreground">
+              Loading categories...
+            </span>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>#</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {categories.map((category, index) => (
+                <TableRow key={category.id}>
+                  <TableCell className="font-medium">{index + 1}</TableCell>
+                  <TableCell>{category.category_name}</TableCell>
+                  <TableCell>{category.desc}</TableCell>
+                  <TableCell>{category.created_at}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline">
+                          <EllipsisIcon />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={handleEdit}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-300"
+                          onClick={() => handleDelete(category.id)}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
-      <AddCategoryModal
-        isOpen={isModalOpen}
-        refetch={refetch}
-        hideModal={() => setIsModalOpen(false)}
-      />
+      {isModalOpen && (
+        <AddCategoryModal
+          isOpen={isModalOpen}
+          refetch={refetch}
+          hideModal={() => setIsModalOpen(false)}
+        />
+      )}
     </>
   );
 }

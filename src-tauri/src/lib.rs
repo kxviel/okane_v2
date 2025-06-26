@@ -29,8 +29,6 @@ async fn get_category(
     let limit = 10;
     let offset = (page - 1) * limit;
 
-    println!("Page: {} Search: {}", page, search);
-
     let query = "
         SELECT * FROM category 
         WHERE category_name LIKE ?
@@ -38,9 +36,9 @@ async fn get_category(
         OFFSET ?";
 
     let rows = sqlx::query(&query)
-        .bind(format!("%{}%", search))
-        .bind(limit)
-        .bind(offset)
+        .bind(format!("%{}%", &search))
+        .bind(&limit)
+        .bind(&offset)
         .fetch_all(&state.db)
         .await
         .map_err(|e| format!("Database query error: {}", e))?;
@@ -48,7 +46,6 @@ async fn get_category(
     let mut categories = Vec::new();
 
     for row in rows {
-        println!("Row: {}", row.get::<String, _>("category_name"));
         let category = Category {
             id: Some(row.get::<i64, _>("id")),
             category_name: row.get::<String, _>("category_name"),
@@ -70,28 +67,38 @@ async fn add_category(
         INSERT INTO category (category_name, desc, created_at)
         VALUES (?, ?, DATETIME('now'))";
 
-    let result = sqlx::query(&query)
+    sqlx::query(&query)
         .bind(&category.category_name)
         .bind(&category.desc)
-        .execute(&state.db) // Use the database pool from app state
+        .execute(&state.db)
         .await
         .map_err(|e| format!("Database insert error: {}", e))?;
 
-    println!(
-        "Category added successfully, rows affected: {}",
-        result.rows_affected()
-    );
-    Ok(format!(
-        "Category '{}' added successfully",
-        category.category_name
-    ))
+    Ok("Category added successfully".to_string())
+}
+
+#[tauri::command]
+async fn delete_category(id: i64, state: State<'_, database::AppState>) -> Result<String, String> {
+    let query = "DELETE FROM category WHERE id = ?";
+
+    sqlx::query(&query)
+        .bind(&id)
+        .execute(&state.db)
+        .await
+        .map_err(|e| format!("Database delete error: {}", e))?;
+
+    Ok("Category deleted successfully".to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![get_category, add_category])
+        .invoke_handler(tauri::generate_handler![
+            get_category,
+            add_category,
+            delete_category
+        ])
         .setup(|app| {
             tauri::async_runtime::block_on(async move {
                 let db = database::db_connection(&app).await;
