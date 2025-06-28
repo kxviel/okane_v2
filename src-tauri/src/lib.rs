@@ -1,7 +1,7 @@
 mod category;
 mod database;
 
-use category::{add_category, delete_category, get_category};
+use category::{add_category, delete_category, get_category, pre_delete_category};
 use serde::{Deserialize, Serialize};
 
 use tauri::Manager;
@@ -12,14 +12,40 @@ pub struct Params {
     search: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ResponseStruct<T> {
+    message: String,
+    success: bool,
+    data: Option<T>,
+}
+
+impl<T> ResponseStruct<T> {
+    pub fn success(message: &str, data: T) -> Self {
+        Self {
+            message: message.to_string(),
+            success: true,
+            data: Some(data),
+        }
+    }
+
+    pub fn error(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+            success: false,
+            data: None,
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            get_category,
             add_category,
-            delete_category
+            delete_category,
+            get_category,
+            pre_delete_category
         ])
         .setup(|app| {
             tauri::async_runtime::block_on(async move {
