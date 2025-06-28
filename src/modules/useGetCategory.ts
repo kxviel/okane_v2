@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 type Category = {
   id: number;
   category_name: string;
-  desc: string;
+  category_desc: string;
   created_at: string;
 };
 

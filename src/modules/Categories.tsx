@@ -106,7 +106,7 @@ export default function Categories() {
                 <TableRow key={category.id}>
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>{category.category_name}</TableCell>
-                  <TableCell>{category.desc}</TableCell>
+                  <TableCell>{category.category_desc}</TableCell>
                   <TableCell>{category.created_at}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

@@ -22,7 +22,7 @@ type Props = {
 export function AddCategoryModal({ isOpen, refetch, hideModal }: Props) {
   const [form, setForm] = useState({
     category_name: "",
-    desc: "",
+    category_desc: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,11 +60,11 @@ export function AddCategoryModal({ isOpen, refetch, hideModal }: Props) {
               />
             </div>
             <div className="">
-              <Label htmlFor="desc">Category Desc</Label>
+              <Label htmlFor="category_desc">Category Desc</Label>
               <Input
-                id="desc"
-                name="desc"
-                value={form.desc}
+                id="category_desc"
+                name="category_desc"
+                value={form.category_desc}
                 onChange={handleChange}
               />
             </div>
