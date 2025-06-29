@@ -1,9 +1,21 @@
-mod category;
+mod accounts;
+mod categories;
 mod database;
+mod transaction;
 
-use category::{add_category, delete_category, get_category, pre_delete_category, update_category};
+use accounts::{
+    add_account, delete_account, get_account, get_active_accounts, pre_delete_account,
+    update_account, update_account_balance,
+};
+use categories::{
+    add_category, delete_category, get_category, pre_delete_category, update_category,
+};
+use transaction::{
+    add_transaction, delete_transaction, get_transaction, get_transactions_by_account,
+    get_transactions_by_category, get_transactions_by_date_range, update_transaction,
+};
+
 use serde::{Deserialize, Serialize};
-
 use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,7 +58,21 @@ pub fn run() {
             delete_category,
             get_category,
             pre_delete_category,
-            update_category
+            update_category,
+            add_account,
+            delete_account,
+            get_account,
+            get_active_accounts,
+            pre_delete_account,
+            update_account,
+            update_account_balance,
+            get_transaction,
+            add_transaction,
+            update_transaction,
+            delete_transaction,
+            get_transactions_by_category,
+            get_transactions_by_account,
+            get_transactions_by_date_range
         ])
         .setup(|app| {
             tauri::async_runtime::block_on(async move {

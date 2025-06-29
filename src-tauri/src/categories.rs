@@ -37,9 +37,10 @@ pub async fn get_category(
     let limit = 10;
     let offset = (page - 1) * limit;
 
+    // Fixed: Use 'categories' table name and correct column names
     let query = "
-        SELECT id, category_name, description, created_at 
-        FROM category 
+        SELECT id, category_name, category_desc, badge_color, created_at, updated_at
+        FROM categories 
         WHERE category_name LIKE ?
         ORDER BY category_name
         LIMIT ? 
@@ -71,13 +72,15 @@ pub async fn add_category(
     category: Category,
     state: State<'_, database::AppState>,
 ) -> Result<ResponseStruct<Vec<Category>>, String> {
+    // Fixed: Use 'categories' table name
     let query = "
-        INSERT INTO category (category_name, category_desc, created_at, updated_at)
-        VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+        INSERT INTO categories (category_name, category_desc, badge_color, created_at, updated_at)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 
     match sqlx::query(&query)
         .bind(&category.category_name)
         .bind(&category.category_desc)
+        .bind(&category.badge_color)
         .execute(&state.db)
         .await
     {
@@ -98,7 +101,7 @@ pub async fn update_category(
         return Ok(ResponseStruct::error("Cannot edit default category"));
     }
 
-    let category_exists_query = "SELECT id FROM category WHERE id = ?";
+    let category_exists_query = "SELECT id FROM categories WHERE id = ?";
     match sqlx::query_scalar::<_, i64>(&category_exists_query)
         .bind(request.id)
         .fetch_one(&state.db)
@@ -113,7 +116,8 @@ pub async fn update_category(
         }
     };
 
-    let mut update_query = sqlx::QueryBuilder::new("UPDATE category SET ");
+    // Fixed: Use 'categories' table name
+    let mut update_query = sqlx::QueryBuilder::new("UPDATE categories SET ");
     let mut fields = update_query.separated(", ");
     let mut is_dirty = false;
 
@@ -144,7 +148,7 @@ pub async fn update_category(
 
     fields.push("updated_at = CURRENT_TIMESTAMP");
 
-    update_query.push("WHERE id = ").push_bind(request.id);
+    update_query.push(" WHERE id = ").push_bind(request.id);
     match update_query.build().execute(&state.db).await {
         Ok(result) => {
             if result.rows_affected() == 0 {
@@ -174,7 +178,7 @@ pub async fn pre_delete_category(
     }
 
     // Check if category exists
-    let category_exists_query = "SELECT id FROM category WHERE id = ?";
+    let category_exists_query = "SELECT id FROM categories WHERE id = ?";
     match sqlx::query_scalar::<_, i64>(&category_exists_query)
         .bind(id)
         .fetch_one(&state.db)
@@ -236,7 +240,7 @@ pub async fn delete_category(
         }
     };
 
-    let category_exists_query = "SELECT id FROM category WHERE id = ?";
+    let category_exists_query = "SELECT id FROM categories WHERE id = ?";
     match sqlx::query_scalar::<_, i64>(&category_exists_query)
         .bind(id)
         .fetch_one(&mut *tx)
@@ -269,7 +273,7 @@ pub async fn delete_category(
         }
     };
 
-    let delete_query = "DELETE FROM category WHERE id = ?";
+    let delete_query = "DELETE FROM categories WHERE id = ?";
     match sqlx::query(&delete_query).bind(id).execute(&mut *tx).await {
         Ok(_) => {}
         Err(e) => {
