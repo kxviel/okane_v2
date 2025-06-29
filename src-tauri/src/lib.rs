@@ -1,7 +1,7 @@
 mod category;
 mod database;
 
-use category::{add_category, delete_category, get_category, pre_delete_category};
+use category::{add_category, delete_category, get_category, pre_delete_category, update_category};
 use serde::{Deserialize, Serialize};
 
 use tauri::Manager;
@@ -45,7 +45,8 @@ pub fn run() {
             add_category,
             delete_category,
             get_category,
-            pre_delete_category
+            pre_delete_category,
+            update_category
         ])
         .setup(|app| {
             tauri::async_runtime::block_on(async move {

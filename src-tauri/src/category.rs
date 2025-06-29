@@ -8,9 +8,9 @@ use crate::ResponseStruct;
 
 #[derive(Debug, FromRow, Serialize, Deserialize)]
 pub struct Category {
-    id: Option<i64>,
-    category_name: String,
-    category_desc: String,
+    id: i64,
+    category_name: Option<String>,
+    category_desc: Option<String>,
     created_at: Option<String>,
 }
 
@@ -88,6 +88,73 @@ pub async fn add_category(
 }
 
 #[tauri::command]
+pub async fn update_category(
+    request: Category,
+    state: State<'_, database::AppState>,
+) -> Result<ResponseStruct<Vec<Category>>, String> {
+    if request.id == 1 {
+        return Ok(ResponseStruct::error("Cannot edit default category"));
+    }
+
+    let category_exists_query = "SELECT id FROM category WHERE id = ?";
+    match sqlx::query_scalar::<_, i64>(&category_exists_query)
+        .bind(request.id)
+        .fetch_one(&state.db)
+        .await
+    {
+        Ok(_) => {}
+        Err(sqlx::Error::RowNotFound) => {
+            return Ok(ResponseStruct::error("Category not found"));
+        }
+        Err(e) => {
+            return Ok(ResponseStruct::error(&format!("Database error: {}", e)));
+        }
+    };
+
+    let mut update_query = sqlx::QueryBuilder::new("UPDATE category SET ");
+    let mut fields = update_query.separated(", ");
+    let mut is_dirty = false;
+
+    if let Some(name) = &request.category_name {
+        if name.trim().is_empty() {
+            return Ok(ResponseStruct::error("Category name cannot be empty"));
+        }
+
+        fields.push("category_name = ").push_bind(name);
+        is_dirty = true;
+    }
+
+    if let Some(desc) = &request.category_desc {
+        fields.push("category_desc = ").push_bind(desc);
+        is_dirty = true;
+    }
+
+    if !is_dirty {
+        return Ok(ResponseStruct::error(
+            "At least one field must be provided for update",
+        ));
+    }
+
+    update_query.push("WHERE id = ").push_bind(request.id);
+    match update_query.build().execute(&state.db).await {
+        Ok(result) => {
+            if result.rows_affected() == 0 {
+                Ok(ResponseStruct::error("No changes were made"))
+            } else {
+                Ok(ResponseStruct::success(
+                    "Category updated successfully",
+                    vec![],
+                ))
+            }
+        }
+        Err(e) => Ok(ResponseStruct::error(&format!(
+            "Failed to update category: {}",
+            e
+        ))),
+    }
+}
+
+#[tauri::command]
 pub async fn pre_delete_category(
     id: i64,
     state: State<'_, database::AppState>,
@@ -98,8 +165,8 @@ pub async fn pre_delete_category(
     }
 
     // Check if category exists
-    let if_category_exists_query = "SELECT id FROM category WHERE id = ?";
-    match sqlx::query_scalar::<_, i64>(&if_category_exists_query)
+    let category_exists_query = "SELECT id FROM category WHERE id = ?";
+    match sqlx::query_scalar::<_, i64>(&category_exists_query)
         .bind(id)
         .fetch_one(&state.db)
         .await
@@ -160,8 +227,8 @@ pub async fn delete_category(
         }
     };
 
-    let if_category_exists_query = "SELECT id FROM category WHERE id = ?";
-    match sqlx::query_scalar::<_, i64>(&if_category_exists_query)
+    let category_exists_query = "SELECT id FROM category WHERE id = ?";
+    match sqlx::query_scalar::<_, i64>(&category_exists_query)
         .bind(id)
         .fetch_one(&mut *tx)
         .await
