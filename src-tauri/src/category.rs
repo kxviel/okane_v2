@@ -11,7 +11,9 @@ pub struct Category {
     id: i64,
     category_name: Option<String>,
     category_desc: Option<String>,
+    badge_color: Option<String>,
     created_at: Option<String>,
+    updated_at: Option<String>,
 }
 
 const DEFAULT_CATEGORY_ID: i64 = 1;
@@ -70,8 +72,8 @@ pub async fn add_category(
     state: State<'_, database::AppState>,
 ) -> Result<ResponseStruct<Vec<Category>>, String> {
     let query = "
-        INSERT INTO category (category_name, category_desc, created_at)
-        VALUES (?, ?, DATETIME('now'))";
+        INSERT INTO category (category_name, category_desc, created_at, updated_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 
     match sqlx::query(&query)
         .bind(&category.category_name)
@@ -115,17 +117,22 @@ pub async fn update_category(
     let mut fields = update_query.separated(", ");
     let mut is_dirty = false;
 
-    if let Some(name) = &request.category_name {
-        if name.trim().is_empty() {
+    if let Some(category_name) = &request.category_name {
+        if category_name.trim().is_empty() {
             return Ok(ResponseStruct::error("Category name cannot be empty"));
         }
 
-        fields.push("category_name = ").push_bind(name);
+        fields.push("category_name = ").push_bind(category_name);
         is_dirty = true;
     }
 
-    if let Some(desc) = &request.category_desc {
-        fields.push("category_desc = ").push_bind(desc);
+    if let Some(category_desc) = &request.category_desc {
+        fields.push("category_desc = ").push_bind(category_desc);
+        is_dirty = true;
+    }
+
+    if let Some(badge_color) = &request.badge_color {
+        fields.push("badge_color = ").push_bind(badge_color);
         is_dirty = true;
     }
 
@@ -134,6 +141,8 @@ pub async fn update_category(
             "At least one field must be provided for update",
         ));
     }
+
+    fields.push("updated_at = CURRENT_TIMESTAMP");
 
     update_query.push("WHERE id = ").push_bind(request.id);
     match update_query.build().execute(&state.db).await {

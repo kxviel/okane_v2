@@ -97,7 +97,7 @@ export default function Categories() {
                 <TableHead>#</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Created At</TableHead>
+                <TableHead>Modified At</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -107,7 +107,7 @@ export default function Categories() {
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>{category.category_name}</TableCell>
                   <TableCell>{category.category_desc}</TableCell>
-                  <TableCell>{category.created_at}</TableCell>
+                  <TableCell>{category.updated_at}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

@@ -2,10 +2,12 @@ CREATE TABLE IF NOT EXISTS category (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     category_name TEXT NOT NULL UNIQUE,
     category_desc TEXT,
+    badge_color TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO category (id, category_name, category_desc, created_at) VALUES (1, "uncategorized", "default category", DATETIME("now"));
+INSERT INTO category (id, category_name, category_desc, badge_color, created_at, updated_at) VALUES (1, "uncategorized", "default category", "green-200", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

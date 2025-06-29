@@ -5,7 +5,9 @@ type Category = {
   id: number;
   category_name: string;
   category_desc: string;
+  badge_color: string;
   created_at: string;
+  updated_at: string;
 };
 
 type Props = {
